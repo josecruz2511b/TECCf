@@ -44,3 +44,11 @@ def actualizar(id:int, tareaActualizado:dict):
             tareas[index].update(tareaActualizado)
             return tareas[index]
     raise HTTPException(status_code=400, detail="El id ya no existe")
+
+@app.delete('/listatareas/{id}',tags=["Eliminar una tarea."])
+def EliminarTarea(id:int):
+    for i in range(len(tareas)):
+        if tareas[i]["id"]==id:
+            tareas.pop(i)
+            return {"mensaje":"tarea eliminado"}
+    raise HTTPException(status_code=404,detail="tarea no encontrado")
