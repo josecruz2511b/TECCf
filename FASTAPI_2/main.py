@@ -36,3 +36,11 @@ def nuevo(tarea:dict):
             raise HTTPException(status_code=400, detail="El id ya esta hechale coco")
     tareas.append(tarea)
     return tarea
+
+@app.put('/listatareas/{id}',tags=['Actualizar una tarea existente.'])
+def actualizar(id:int, tareaActualizado:dict):
+    for index, urs in enumerate(tareas): 
+        if urs ["id"] == id:
+            tareas[index].update(tareaActualizado)
+            return tareas[index]
+    raise HTTPException(status_code=400, detail="El id ya no existe")
