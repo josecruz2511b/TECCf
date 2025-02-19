@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException 
 from typing import Optional 
 #declaramos un objeto 
 app = FastAPI(
@@ -22,3 +22,9 @@ def main():
 @app.get('/listareas',tags=['Operaciones CRUD'])
 def ConsultarTodos():
     return{"Lista de Tareas ": tareas}
+
+@app.get('/listareas/{id}',tags=['Obtener una tarea específica por su ID.'])
+def obtener(id:int):
+    for tarea in tareas:
+        if tarea["id"] == id:
+            return tarea
