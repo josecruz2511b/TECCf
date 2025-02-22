@@ -28,6 +28,8 @@ def obtener(id:int):
     for tarea in tareas:
         if tarea["id"] == id:
             return tarea
+    raise HTTPException(status_code=400, detail="El id  no existe")
+        
         
 @app.post('/listareas/',tags=['Crear una nueva tarea.'])
 def nuevo(tarea:dict):
