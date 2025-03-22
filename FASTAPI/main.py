@@ -5,12 +5,17 @@ from typing import Optional, List
 from modelsPydantic import modelUsuario, modelAuth
 from tokenGen import create_token
 from middlewares import BearerJWT
+from DB.conexion import Session, engine, Base
+from models.modelsDB import User
 #declaramos un objeto 
 app = FastAPI(
     title='Mi primer API 196', 
     description='Jose GUadalupe De la Cruz',
     version='1.0.1'
 )
+
+#levanta las tablas definidas en modelos
+Base.metadata.create_all(bind=engine)
 
 
 usuarios=[
@@ -41,13 +46,19 @@ def login(autorizado:modelAuth):
 def ConsultarTodos():
     return usuarios
 
+#agregar 
 @app.post('/usuarios/', response_model= modelUsuario,tags=['Operaciones CRUD'])
 def guardar(usuario: modelUsuario):
-    for usr in usuarios: 
-        if usr ["id"] == usuario.id:
-            raise HTTPException(status_code=400, detail="El id ya esta hechale coco")
-    usuarios.append(usuario)
-    return usuario
+    db= Session()
+    try:
+        db.add(User(**usuario.model_dump()))
+        db.commit()
+        return JSONResponse(status_code=201,content={"mensaje":"usuario creado", "usuario": usuario.model_dump()})
+    except Exception as e:
+        db.rollback()
+        return JSONResponse(status_code=500,content={"mensaje":"Error al guardar usuario", "Excepcion":str(e)})
+    finally:
+        db.close()
 
 @app.put('/usuarios/{id}',response_model= modelUsuario,tags=['Operaciones CRUD'])
 def actualizar(id:int, usuarioActualizado:modelUsuario):
