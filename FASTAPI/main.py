@@ -1,6 +1,7 @@
 
 from fastapi import FastAPI, HTTPException, Depends
 from fastapi.responses import JSONResponse 
+from fastapi.encoders import jsonable_encoder
 from typing import Optional, List
 from modelsPydantic import modelUsuario, modelAuth
 from tokenGen import create_token
@@ -18,33 +19,42 @@ app = FastAPI(
 Base.metadata.create_all(bind=engine)
 
 
-usuarios=[
-    {"id":1, "nombre":"juanito","edad": 37, "correo":"ivan@example.com"},
-    {"id":2, "nombre":"isaac","edad": 22, "correo":"juan@example.com"},
-    {"id":3, "nombre":"bryan","edad": 21, "correo":"isaac@example.com"},
-    {"id":4, "nombre":"emilito","edad": 23, "correo":"jose@example.com"}
-]
-
 #generamos nuestro primer endpoint 
 # endpoint tipo get 
 @app.get('/', tags=['Inicio'])
 def main():
     return {'hello FastAPI':'Jose Guadalupe'}
 
-@app.post('/auth/', tags=['Autentificacion'])
-def login(autorizado:modelAuth):
-    if autorizado.correo =='ivan@example.com' and autorizado.password == '12345678':
-        token:str = create_token(autorizado.model_dump())
-        print(token)
-        return JSONResponse(content= token)
-    else:
-        return{"Aviso":"Usuario no autorizado"}
-
 
 # endpoint Consultar todos 
-@app.get('/usuarios',dependencies=[Depends(BearerJWT())], response_model= List[modelUsuario], tags=['Operaciones CRUD'])
+@app.get('/usuarios', tags=['Operaciones CRUD'])
 def ConsultarTodos():
-    return usuarios
+    db= Session()
+    try:
+        consulta= db.query(User).all()
+        return JSONResponse(content= jsonable_encoder(consulta))
+    
+    except Exception as x:
+        return JSONResponse(status_code=500,content={"mensaje":"No fue posible consultar", "Excepcion":str(x)})
+
+    finally:
+        db.close()
+
+@app.get('/usuarios/{id}', tags=['Operaciones CRUD'])
+def ConsultarUno(id:int):
+    db= Session()
+    try:
+        consulta= db.query(User).filter(User.id==id).first()
+        if not consulta:
+            return JSONResponse(status_code=404,content={"mensaje":"Usuario no encontrado"})
+        return JSONResponse(content= jsonable_encoder(consulta))
+    
+    except Exception as x:
+        return JSONResponse(status_code=500,content={"mensaje":"No fue posible consultar", "Excepcion":str(x)})
+
+    finally:
+        db.close()
+
 
 #agregar 
 @app.post('/usuarios/', response_model= modelUsuario,tags=['Operaciones CRUD'])
@@ -60,7 +70,7 @@ def guardar(usuario: modelUsuario):
     finally:
         db.close()
 
-@app.put('/usuarios/{id}',response_model= modelUsuario,tags=['Operaciones CRUD'])
+""" @app.put('/usuarios/{id}',response_model= modelUsuario,tags=['Operaciones CRUD'])
 def actualizar(id:int, usuarioActualizado:modelUsuario):
     for index, urs in enumerate(usuarios): 
         if urs ["id"] == id:
@@ -75,4 +85,13 @@ def EliminarUsuario(id:int):
         if usuarios[i]["id"]==id:
             usuarios.pop(i)
             return {"mensaje":"usuario eliminado"}
-    raise HTTPException(status_code=404,detail="usuario no encontrado")
+    raise HTTPException(status_code=404,detail="usuario no encontrado") """
+
+@app.post('/auth/', tags=['Autentificacion'])
+def login(autorizado:modelAuth):
+    if autorizado.correo =='ivan@example.com' and autorizado.password == '12345678':
+        token:str = create_token(autorizado.model_dump())
+        print(token)
+        return JSONResponse(content= token)
+    else:
+        return{"Aviso":"Usuario no autorizado"}
