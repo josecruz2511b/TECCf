@@ -49,8 +49,8 @@ def ConsultarUno(id:int):
             return JSONResponse(status_code=404,content={"mensaje":"Usuario no encontrado"})
         return JSONResponse(content= jsonable_encoder(consulta))
     
-    except Exception as x:
-        return JSONResponse(status_code=500,content={"mensaje":"No fue posible consultar", "Excepcion":str(x)})
+    except Exception as b:
+        return JSONResponse(status_code=500,content={"mensaje":"No fue posible consultar", "Excepcion":str(b)})
 
     finally:
         db.close()
@@ -70,22 +70,39 @@ def guardar(usuario: modelUsuario):
     finally:
         db.close()
 
-""" @app.put('/usuarios/{id}',response_model= modelUsuario,tags=['Operaciones CRUD'])
+@app.put('/usuarios/{id}',tags=['Operaciones CRUD'])
 def actualizar(id:int, usuarioActualizado:modelUsuario):
-    for index, urs in enumerate(usuarios): 
-        if urs ["id"] == id:
-            usuarios[index]= usuarioActualizado.model_dump()
-            return usuarios[index]
-    raise HTTPException(status_code=400, detail="El id ya no existe")
+    db= Session()
+    try:
+        consulta= db.query(User).filter(User.id==id).first()
+        if not consulta:
+            return JSONResponse(status_code=404,content={"mensaje":"Usuario no encontrado"})
+        db.query(User).filter(User.id==id).update(usuarioActualizado.model_dump())
+        db.commit()
+        return JSONResponse(status_code=200,content={"mensaje":"usuario actualizado", "usuario": usuarioActualizado.model_dump()})
+    except Exception as t:
+        db.rollback()
+        return JSONResponse(status_code=500,content={"mensaje":"Error al actualizar usuario", "Excepcion":str(t)})
+    finally:
+        db.close()
 
 #endpoint para eliminar usuario
 @app.delete('/usuarios/{id}',tags=["Operaciones CRUD"])
 def EliminarUsuario(id:int):
-    for i in range(len(usuarios)):
-        if usuarios[i]["id"]==id:
-            usuarios.pop(i)
-            return {"mensaje":"usuario eliminado"}
-    raise HTTPException(status_code=404,detail="usuario no encontrado") """
+    db= Session()
+    try:
+        consulta= db.query(User).filter(User.id==id).first()
+        if not consulta:
+            return JSONResponse(status_code=404,content={"mensaje":"Usuario no encontrado"})
+        db.query(User).filter(User.id==id).delete()
+        db.commit()
+        return JSONResponse(status_code=200,content={"mensaje":"usuario eliminado"})
+    except Exception as a:
+        db.rollback()
+        return JSONResponse(status_code=500,content={"mensaje":"Error al eliminar usuario", "Excepcion":str(a)})
+    finally:
+        db.close()
+
 
 @app.post('/auth/', tags=['Autentificacion'])
 def login(autorizado:modelAuth):
