@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <title>Consulta de Usuarios</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='estilos.css') }}">
+</head>
+<body>
+    <h1>Consulta de Usuarios</h1>
+    <h2>FastAPI</h2>
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    
+    <table>
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Nombre</th>
+                <th>Edad</th>
+                <th>Correo</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if usuarios %}
+                {% for usuario in usuarios %}
+                    <tr>
+                        <td>{{ usuario.id }}</td>
+                        <td>{{ usuario.name }}</td>
+                        <td>{{ usuario.age }}</td>
+                        <td>{{ usuario.email }}</td>
+                        <td class="actions">
+                            <a href="{{ url_for('editar_usuario', id=usuario.id) }}" class="btn btn-edit">Editar</a>
+                            <a href="{{ url_for('eliminar_usuario', id=usuario.id) }}" class="btn btn-delete" onclick="return confirm('¿Estás seguro de eliminar este usuario?')">Eliminar</a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="5">No se encontraron usuarios o hubo un error al cargar los datos</td>
+                </tr>
+            {% endif %}
+        </tbody>
+    </table>
+    
+    <a href="{{ url_for('home') }}" class="btn btn-back">Regresar al formulario</a>
+</body>
+</html>
